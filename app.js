@@ -1,39 +1,32 @@
 const express = require('express');
 const app = express();
 
-// מאפשר לקבל נתונים בפורמט JSON
+// מאפשר קבלת נתונים בפורמט JSON
 app.use(express.json());
 
-// Endpoint לקבלת נתונים מימות המשיח
+// 🔹 קבלת הזמנות מימות המשיח
 app.post('/api/yemot', (req, res) => {
-  const data = req.body;
-  
-  // כאן אתה מקבל את הנתונים שימות המשיח שולח
-  console.log('נתונים התקבלו:', data);
+  console.log('📥 קיבלנו נתונים:', req.body);
 
-  // לדוגמה, נבצע הפנייה לתשלום ב-PayPal – זהו רק קונספט ראשוני
-  // במציאות, יש להשתמש ב-SDK של PayPal או לבצע קריאת API מתאימה
-  // נניח שאחרי העיבוד אנחנו מחזירים קישור לתשלום:
+  // כאן אתה יכול לעבד את הנתונים ולטפל בהזמנה
+  
+  // לדוגמה: יצירת קישור תשלום בפייפאל (זה רק דוגמה)
   const paypalLink = "https://www.sandbox.paypal.com/checkoutnow?token=EXAMPLE";
 
   res.json({
-    message: 'נתונים התקבלו, מפנה לתשלום ב-PayPal...',
+    status: 'success',
+    message: 'נתונים התקבלו!',
     redirect: paypalLink
   });
 });
 
-// Endpoint בסיסי לבדיקת תקינות השרת
+// 🔹 בדיקת תקינות השרת
 app.get('/', (req, res) => {
-  res.send('השרת פעיל, אחי!');
+  res.send('🚀 השרת פעיל!');
 });
 
-module.exports = app;
-app.post('/api/yemot', (req, res) => {
-  app.post('/', async (req, res) => {
-  console.log('Received order:', req.body);
-  res.status(200).send('Order received');
-});
-
-  console.log('📥 קיבלנו נתונים:', req.body);
-  res.json({ status: 'success', message: 'נתונים התקבלו!' });
+// הפעלת השרת
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ השרת רץ על פורט ${PORT}`);
 });
