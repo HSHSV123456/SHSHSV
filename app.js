@@ -28,3 +28,7 @@ app.get('/', (req, res) => {
 });
 
 module.exports = app;
+app.post('/api/yemot', (req, res) => {
+  console.log('📥 קיבלנו נתונים:', req.body);
+  res.json({ status: 'success', message: 'נתונים התקבלו!' });
+});
