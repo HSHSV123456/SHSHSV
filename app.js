@@ -7,6 +7,19 @@ app.use(express.json());
 // 🔹 קבלת הזמנות מימות המשיח
 app.post('/api/yemot', (req, res) => {
   console.log('📥 קיבלנו נתונים:', req.body);
+const express = require("express");
+const app = express();
+const path = require("path");
+
+// שרת קבצים סטטיים
+app.use(express.static(path.join(__dirname, "public")));
+
+// טיפול בבקשת favicon
+app.get("/favicon.ico", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "favicon.ico"));
+});
+
+app.listen(3000, () => console.log("✅ Server is running on port 3000"));
 
   // כאן אתה יכול לעבד את הנתונים ולטפל בהזמנה
   
@@ -30,3 +43,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`✅ השרת רץ על פורט ${PORT}`);
 });
+
