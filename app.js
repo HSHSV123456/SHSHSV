@@ -1,46 +1,46 @@
-const express = require("express");
-const paypal = require("paypal-rest-sdk");
+require('dotenv').config();
+const express = require('express');
+const axios = require('axios');
 
 const app = express();
 app.use(express.json());
 
-// 🔹 הכנס כאן את ה-Client ID וה-Secret שלך
-paypal.configure({
-  mode: "sandbox", // כשעוברים לאמיתי, מחליפים ל-"live"
-  client_id: "AyIWPkQxITF3Q-mdDhemyQFzJp5n6YdfkTlIdf2GqeaA8866NhU7hs1tZHtcoetTMbKfDo88f-5C19",
-  client_secret: "EGwmrWkXn3cxr3t6uerGoXswPkjwKGyN1eRzL4-4XgzLzQXyMC85y3CUxrTXqN3SjFuMR8EYRklgd"
+const PAYPAL_CLIENT_ID = 'הכנס כאן את ה-Client ID שלך';
+const PAYPAL_SECRET = 'הכנס כאן את ה-Secret שלך';
+const PAYPAL_API = 'https://api-m.sandbox.paypal.com'; // למצב טסט
+
+// 🔹 יצירת הזמנה בפייפאל
+app.post('/create-paypal-order', async (req, res) => {
+    try {
+        const { amount } = req.body;
+        
+        const auth = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_SECRET}`).toString('base64');
+        
+        const response = await axios.post(`${PAYPAL_API}/v2/checkout/orders`, {
+            intent: 'CAPTURE',
+            purchase_units: [{
+                amount: { currency_code: 'USD', value: amount }
+            }]
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Basic ${auth}`
+            }
+        });
+
+        res.json({ orderID: response.data.id });
+    } catch (error) {
+        console.error('❌ שגיאה ביצירת הזמנה:', error.response?.data || error.message);
+        res.status(500).send('Error creating PayPal order');
+    }
 });
 
-// 🔹 יצירת בקשה לתשלום
-app.post("/pay", (req, res) => {
-  const create_payment_json = {
-    intent: "sale",
-    payer: { payment_method: "paypal" },
-    transactions: [
-      {
-        amount: { currency: "USD", total: "10.00" },
-        description: "רכישה מחנות ימות המשיח"
-      }
-    ],
-    redirect_urls: {
-      return_url: "http://localhost:3000/success",
-      cancel_url: "http://localhost:3000/cancel"
-    }
-  };
-
-  paypal.payment.create(create_payment_json, (error, payment) => {
-    if (error) {
-      console.error(error);
-      res.status(500).json({ error: "שגיאה ביצירת תשלום" });
-    } else {
-      for (let link of payment.links) {
-        if (link.rel === "approval_url") {
-          res.json({ redirect: link.href });
-        }
-      }
-    }
-  });
+// 🔹 בדיקת תקינות
+app.get('/', (req, res) => {
+    res.send('🚀 השרת מחובר לפייפאל!');
 });
 
-// הפעלת השרת
-app.listen(3000, () => console.log("✅ השרת רץ על פורט 3000"));
+const PORT = 3000;
+app.listen(PORT, () => {
+    console.log(`✅ השרת פועל על פורט ${PORT}`);
+});
