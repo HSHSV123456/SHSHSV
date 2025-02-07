@@ -1,43 +1,46 @@
 const express = require("express");
-const path = require("path");
+const paypal = require("paypal-rest-sdk");
 
 const app = express();
-
-// מאפשר קבלת נתונים בפורמט JSON
 app.use(express.json());
 
-// 🔹 שרת קבצים סטטיים (כולל favicon)
-app.use(express.static(path.join(__dirname, "public")));
-
-// טיפול בבקשת favicon (למנוע שגיאת 404)
-app.get("/favicon.ico", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "favicon.ico"));
+// 🔹 הכנס כאן את ה-Client ID וה-Secret שלך
+paypal.configure({
+  mode: "sandbox", // כשעוברים לאמיתי, מחליפים ל-"live"
+  client_id: "AyIWPkQxITF3Q-mdDhemyQFzJp5n6YdfkTlIdf2GqeaA8866NhU7hs1tZHtcoetTMbKfDo88f-5C19",
+  client_secret: "EGwmrWkXn3cxr3t6uerGoXswPkjwKGyN1eRzL4-4XgzLzQXyMC85y3CUxrTXqN3SjFuMR8EYRklgd"
 });
 
-// 🔹 קבלת הזמנות מימות המשיח
-app.post("/api/yemot", (req, res) => {
-  console.log("📥 קיבלנו נתונים:", req.body);
+// 🔹 יצירת בקשה לתשלום
+app.post("/pay", (req, res) => {
+  const create_payment_json = {
+    intent: "sale",
+    payer: { payment_method: "paypal" },
+    transactions: [
+      {
+        amount: { currency: "USD", total: "10.00" },
+        description: "רכישה מחנות ימות המשיח"
+      }
+    ],
+    redirect_urls: {
+      return_url: "http://localhost:3000/success",
+      cancel_url: "http://localhost:3000/cancel"
+    }
+  };
 
-  // כאן אתה יכול לעבד את הנתונים ולטפל בהזמנה
-  
-  // יצירת קישור תשלום (דוגמה עם PayPal)
-  const paypalLink =
-    "https://www.sandbox.paypal.com/checkoutnow?token=EXAMPLE";
-
-  res.json({
-    status: "success",
-    message: "נתונים התקבלו!",
-    redirect: paypalLink,
+  paypal.payment.create(create_payment_json, (error, payment) => {
+    if (error) {
+      console.error(error);
+      res.status(500).json({ error: "שגיאה ביצירת תשלום" });
+    } else {
+      for (let link of payment.links) {
+        if (link.rel === "approval_url") {
+          res.json({ redirect: link.href });
+        }
+      }
+    }
   });
 });
 
-// 🔹 בדיקת תקינות השרת
-app.get("/", (req, res) => {
-  res.send("🚀 השרת פעיל!");
-});
-
-// הפעלת השרת פעם אחת בלבד!
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`✅ השרת רץ על פורט ${PORT}`);
-});
+// הפעלת השרת
+app.listen(3000, () => console.log("✅ השרת רץ על פורט 3000"));
