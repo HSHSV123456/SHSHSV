@@ -5,9 +5,14 @@ const axios = require('axios');
 const app = express();
 app.use(express.json());
 
-const PAYPAL_CLIENT_ID = 'הכנס כאן את ה-Client ID שלך';
-const PAYPAL_SECRET = 'הכנס כאן את ה-Secret שלך';
+const PAYPAL_CLIENT_ID = AYpWKqXtITF3Q-mdDhemyQFzJp5nxYdTfxTldPZGqeaA8866NmhU7rs1HzNftcoceTMbkFDoBBf-5Ct9
+const PAYPAL_SECRET = EGwmVWoXnn3ozf63TUer0dOSVVpxjwGdYNzL2L4-4XgrZJoX7kyMCB5y3CuuTXqN3uFjqMR8EYkIlqdl
 const PAYPAL_API = 'https://api-m.sandbox.paypal.com'; // למצב טסט
+
+if (!PAYPAL_CLIENT_ID || !PAYPAL_SECRET) {
+    console.error('❌ שגיאה: חסרים PAYPAL_CLIENT_ID או PAYPAL_SECRET');
+    process.exit(1);
+}
 
 // 🔹 יצירת הזמנה בפייפאל
 app.post('/create-paypal-order', async (req, res) => {
@@ -18,14 +23,9 @@ app.post('/create-paypal-order', async (req, res) => {
         
         const response = await axios.post(`${PAYPAL_API}/v2/checkout/orders`, {
             intent: 'CAPTURE',
-            purchase_units: [{
-                amount: { currency_code: 'USD', value: amount }
-            }]
+            purchase_units: [{ amount: { currency_code: 'USD', value: amount } }]
         }, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Basic ${auth}`
-            }
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${auth}` }
         });
 
         res.json({ orderID: response.data.id });
@@ -40,7 +40,7 @@ app.get('/', (req, res) => {
     res.send('🚀 השרת מחובר לפייפאל!');
 });
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`✅ השרת פועל על פורט ${PORT}`);
 });
