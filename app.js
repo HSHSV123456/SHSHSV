@@ -4,9 +4,9 @@ const axios = require('axios');
 
 const app = express();
 app.use(express.json());
+const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID;AYpWKqXtITF3Q-mdDhemyQFzJp5nxYdTfxTldPZGqeaA8866NmhU7rs1HzNftcoceTMbkFDoBBf-5Ct9
+const PAYPAL_SECRET = process.env.PAYPAL_SECRET;EGwmVWoXnn3ozf63TUer0dOSVVpxjwGdYNzL2L4-4XgrZJoX7kyMCB5y3CuuTXqN3uFjqMR8EYkIlqdl
 
-const PAYPAL_CLIENT_ID = AYpWKqXtITF3Q-mdDhemyQFzJp5nxYdTfxTldPZGqeaA8866NmhU7rs1HzNftcoceTMbkFDoBBf-5Ct9
-const PAYPAL_SECRET = EGwmVWoXnn3ozf63TUer0dOSVVpxjwGdYNzL2L4-4XgrZJoX7kyMCB5y3CuuTXqN3uFjqMR8EYkIlqdl
 const PAYPAL_API = 'https://api-m.sandbox.paypal.com'; // למצב טסט
 
 if (!PAYPAL_CLIENT_ID || !PAYPAL_SECRET) {
