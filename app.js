@@ -62,7 +62,7 @@ app.post('/send-order-to-yemot', async (req, res) => {
 
 // 🔹 בדיקת תקינות
 app.get('/', (req, res) => {
-    res.send('🚀לא  השרת מחובר לפייפאל ולימות המשיח!');
+    res.send('🚀 השרת מחובר לפייפאל ולימות המשיח!');
 });
 
 const PORT = process.env.PORT || 3000;
