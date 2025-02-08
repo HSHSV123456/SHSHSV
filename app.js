@@ -8,73 +8,61 @@ app.use(express.json());
 // ✅ לוקח את הערכים מהקובץ `.env`
 const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
 const PAYPAL_SECRET = process.env.PAYPAL_SECRET;
+const YEMOT_API_KEY = process.env.YEMOT_API_KEY; // 🔹 מפתח API של ימות המשיח
+const PAYPAL_API = 'https://api-m.sandbox.paypal.com'; // למצב טסט
 
-const PAYPAL_API = 'https://api-m.sandbox.paypal.com'; // מצב טסט
-
-if (!PAYPAL_CLIENT_ID || !PAYPAL_SECRET) {
-    console.error('❌ שגיאה: חסרים PAYPAL_CLIENT_ID או PAYPAL_SECRET');
+if (!PAYPAL_CLIENT_ID || !PAYPAL_SECRET || !YEMOT_API_KEY) {
+    console.error('❌ שגיאה: חסרים PAYPAL_CLIENT_ID, PAYPAL_SECRET או YEMOT_API_KEY');
     process.exit(1);
 }
 
-// 🔹 חיבור לימות המשיח וביצוע תשלום בכרטיס אשראי
-app.post('/yemit-webhook', async (req, res) => {
+// 🔹 יצירת הזמנה בפייפאל בשקלים
+app.post('/create-paypal-order', async (req, res) => {
     try {
-        const data = req.body;
-        console.log("📞 התקבלה קריאה מימות המשיח:", data);
-
-        const amount = data?.amount;
-        const card_number = data?.card_number;
-        const card_expiry = data?.card_expiry;
-        const card_cvv = data?.card_cvv;
-
-        if (!amount || isNaN(amount) || amount <= 0) {
-            console.error("❌ סכום לא חוקי:", amount);
-            return res.json({ play: "אירעה שגיאה בקבלת הסכום. נסה שוב." });
-        }
-
-        if (!card_number || !card_expiry || !card_cvv) {
-            console.error("❌ פרטי כרטיס אשראי חסרים.");
-            return res.json({ play: "אירעה שגיאה בפרטי הכרטיס. נסה שוב." });
-        }
-
-        console.log(`🔹 חיוב כרטיס אשראי עבור ${amount} ש"ח...`);
+        const { amount, currency } = req.body;
         
         const auth = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_SECRET}`).toString('base64');
-
-        const response = await axios.post(`${PAYPAL_API}/v2/payments/authorizations`, {
+        
+        const response = await axios.post(`${PAYPAL_API}/v2/checkout/orders`, {
             intent: 'CAPTURE',
-            payer: {
-                payment_method: "credit_card",
-                funding_instruments: [{
-                    credit_card: {
-                        number: card_number,
-                        type: "visa",
-                        expire_month: parseInt(card_expiry.split('/')[0]),
-                        expire_year: parseInt(card_expiry.split('/')[1]),
-                        cvv2: card_cvv
-                    }
-                }]
-            },
-            transactions: [{
-                amount: { currency: "ILS", total: amount.toString() },
-                description: "תשלום דרך ימות המשיח"
-            }]
+            purchase_units: [{ amount: { currency_code: currency || 'ILS', value: amount } }]
         }, {
             headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${auth}` }
         });
 
-        console.log(`✅ התשלום בוצע בהצלחה! מספר אישור: ${response.data.id}`);
-        res.json({ play: `התשלום שלך בוצע בהצלחה! מספר אישור: ${response.data.id}` });
-
+        res.json({ orderID: response.data.id });
     } catch (error) {
-        console.error("❌ שגיאה בתשלום:", error.response?.data || error.message);
-        res.json({ play: "אירעה שגיאה בעיבוד התשלום. נסה שוב." });
+        console.error('❌ שגיאה ביצירת הזמנה:', error.response?.data || error.message);
+        res.status(500).send('Error creating PayPal order');
+    }
+});
+
+// 🔹 שליחת פרטי הזמנה לימות המשיח
+app.post('/send-order-to-yemot', async (req, res) => {
+    try {
+        const { phoneNumber, orderID, amount } = req.body;
+        
+        if (!phoneNumber || !orderID || !amount) {
+            return res.status(400).send('❌ שגיאה: חסרים נתונים בהזמנה');
+        }
+        
+        const yemotResponse = await axios.post('https://api.yemot.com/send-payment', {
+            apiKey: YEMOT_API_KEY,
+            phone: phoneNumber,
+            orderID: orderID,
+            amount: amount
+        });
+        
+        res.json({ message: '✅ פרטי הזמנה נשלחו לימות המשיח', response: yemotResponse.data });
+    } catch (error) {
+        console.error('❌ שגיאה בשליחת נתונים לימות המשיח:', error.response?.data || error.message);
+        res.status(500).send('Error sending order details to Yemot');
     }
 });
 
 // 🔹 בדיקת תקינות
 app.get('/', (req, res) => {
-    res.send('🚀 השרת מחובר לפייפאל ולימות המשיח!');
+    res.send('🚀לא  השרת מחובר לפייפאל ולימות המשיח!');
 });
 
 const PORT = process.env.PORT || 3000;
