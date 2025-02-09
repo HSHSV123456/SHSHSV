@@ -1,3 +1,8 @@
+if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_SECRET || !process.env.YEMOT_API_KEY) {
+    console.error("Missing required environment variables");
+    process.exit(1);
+}
+
 require("dotenv").config();
 const express = require("express");
 const axios = require("axios");
