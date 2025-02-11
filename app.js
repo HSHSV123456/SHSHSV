@@ -1,3 +1,6 @@
+const yemotWebhook = require('./yemot-webhook');
+app.use('/', yemotWebhook);
+
 require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
