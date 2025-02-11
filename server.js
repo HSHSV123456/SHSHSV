@@ -1,3 +1,38 @@
+require('dotenv').config();
+const express = require('express');
+const axios = require('axios');
+
+const app = express();
+app.use(express.json());
+
+const YEMOT_API_KEY = process.env.YEMOT_API_KEY;
+const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
+const PAYPAL_SECRET = process.env.PAYPAL_SECRET;
+const PAYPAL_API = 'https://api-m.sandbox.paypal.com'; // מצב טסט
+
+// 🔹 קליטת הנתונים מימות המשיח
+app.post('/yemot-webhook', async (req, res) => {
+    try {
+        const { CallerID, ApiData } = req.body; // נתוני השיחה
+
+        console.log("📞 שיחה נכנסת:", CallerID);
+        console.log("📦 נתונים שהתקבלו:", ApiData);
+
+        // כאן אפשר להפעיל תהליך תשלום, לעדכן מלאי, או לשלוח הודעה חזרה
+
+        res.json({ status: "success", message: "נתונים התקבלו" });
+    } catch (error) {
+        console.error("❌ שגיאה בקבלת הנתונים:", error.message);
+        res.status(500).send("Error processing request");
+    }
+});
+
+// 🔹 הפעלת השרת
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`✅ השרת פועל על פורט ${PORT}`);
+});
+
 require("dotenv").config();
 const express = require("express");
 const axios = require("axios");
