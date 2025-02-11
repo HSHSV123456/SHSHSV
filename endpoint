@@ -1,0 +1,48 @@
+const express = require('express');
+const axios = require('axios');
+require('dotenv').config();
+
+const app = express();
+app.use(express.json());
+
+// 🔑 משתני סביבה
+const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
+const PAYPAL_SECRET = process.env.PAYPAL_SECRET;
+const PAYPAL_API = 'https://api-m.sandbox.paypal.com'; // מצב טסט
+
+// 🔹 קליטת הזמנה מימות המשיח
+app.post('/yemot-order', async (req, res) => {
+    try {
+        const { caller, order, price } = req.body;
+
+        console.log(`📦 קיבלנו הזמנה מ: ${caller}, מוצר: ${order}, מחיר: ${price} ש"ח`);
+
+        // המרת סכום לשקלים (בהנחה שפייפאל דורש USD)
+        const amountUSD = (price * 0.28).toFixed(2); // לדוגמה, שער חליפין 1 ש"ח = 0.28 דולר
+
+        // יצירת הזמנה בפייפאל
+        const auth = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_SECRET}`).toString('base64');
+
+        const response = await axios.post(`${PAYPAL_API}/v2/checkout/orders`, {
+            intent: 'CAPTURE',
+            purchase_units: [{ amount: { currency_code: 'USD', value: amountUSD } }]
+        }, {
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${auth}` }
+        });
+
+        const orderID = response.data.id;
+        console.log(`✅ הזמנה נוצרה בפייפאל: ${orderID}`);
+
+        res.json({ success: true, orderID });
+
+    } catch (error) {
+        console.error('❌ שגיאה ביצירת הזמנה:', error.response?.data || error.message);
+        res.status(500).send('Error creating order');
+    }
+});
+
+// הפעלת השרת
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`✅ השרת פועל על פורט ${PORT}`);
+});
