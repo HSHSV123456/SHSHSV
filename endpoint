@@ -6,9 +6,11 @@ const app = express();
 app.use(express.json());
 
 // 🔑 משתני סביבה
-const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
-const PAYPAL_SECRET = process.env.PAYPAL_SECRET;
-const PAYPAL_API = 'https://api-m.sandbox.paypal.com'; // מצב טסט
+
+PAYPAL_CLIENT_ID=AYpWKqXtITF3Q-mdDhemyQFzJp5nxYdTfxTldPZGqeaA8866NmhU7rs1HzNftcoceTMbkFDoBBf-5Ct9
+PAYPAL_SECRET=EGwmVWoXnn3ozf63TUer0dOSVVpxjwGdYNzL2L4-4XgrZJoX7kyMCB5y3CuuTXqN3uFjqMR8EYkIlqdl
+PORT=3000
+YEMOT_API_KEY={"responseStatus":"OK","token":"c83AJT3vwLAWzsfI","yemotAPIVersion":6}
 
 // 🔹 קליטת הזמנה מימות המשיח
 app.post('/yemot-order', async (req, res) => {
